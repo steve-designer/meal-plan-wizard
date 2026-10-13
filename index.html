@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Meal Plan Wizard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0,0" />
+<style>
+  :root { --coral: #FA9D7E; --coral-soft: #fff5f2; --coral-line: #fde0d5; --text: #111827; --muted: #6b7280; --faint: #9ca3af; --border: #ebebed; --skeleton: #f3f4f6; --bg: #eceef1; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 24px 16px; gap: 14px; }
+  .mat-icon { font-family: 'Material Symbols Rounded'; font-weight: normal; font-style: normal; line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga'; }
+  .note { font-size: 13px; color: var(--muted); text-align: center; max-width: 380px; margin: 0; }
+  .note button { font: inherit; color: var(--coral); background: none; border: none; font-weight: 700; cursor: pointer; text-decoration: underline; }
+
+  .phone { width: 375px; max-width: 100%; height: 760px; background: linear-gradient(180deg, #fff3ee 0px, #fffaf8 190px, #fff 340px); border-radius: 36px; box-shadow: 0 20px 50px rgba(0,0,0,0.15); overflow: hidden; position: relative; display: flex; flex-direction: column; }
+  .appbar { flex-shrink: 0; height: 64px; display: flex; align-items: center; justify-content: center; position: relative; font-weight: 700; font-size: 16px; }
+  .appbar-back { position: absolute; left: 16px; width: 40px; height: 40px; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center; color: var(--muted); }
+  .scroll { flex: 1; overflow-y: auto; padding: 8px 16px 120px; }
+
+  .wiz-top { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .wiz-progress { flex: 1; display: flex; gap: 4px; }
+  .wiz-seg { flex: 1; height: 4px; border-radius: 999px; background: #f0f0f2; transition: background .25s; }
+  .wiz-seg.on { background: var(--coral); }
+  .wiz-count { font-size: 12px; font-weight: 700; color: var(--coral); white-space: nowrap; }
+  .wiz-step { animation: wiz-in .22s ease-out; }
+  @keyframes wiz-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .wiz-head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; margin-bottom: 24px; }
+  .wiz-title { font-size: 27px; font-weight: 900; letter-spacing: -.6px; margin: 4px 0 0; line-height: 1.15; max-width: 330px; }
+  .wiz-sub { text-wrap: balance; font-size: 14px; color: var(--muted); margin: 0; line-height: 1.5; max-width: 320px; }
+  .logo { width: 84px; height: 84px; border-radius: 50%; background: var(--coral); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 34px; font-weight: 800; border: 4px solid #fff; box-shadow: 0 0 0 3px var(--coral), 0 10px 30px rgba(250,157,126,.45); margin-bottom: 10px; letter-spacing: -1px; }
+
+  .macro-prompt { background: #fff; display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 14px; cursor: pointer; }
+  .macro-prompt .mat-icon { color: var(--coral); font-size: 22px; }
+  .mp-title { font-size: 14px; font-weight: 700; display: block; }
+  .mp-sub { font-size: 12px; color: var(--faint); line-height: 1.4; }
+  .macro-summary { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 14px 14px 12px; }
+  .pills { display: flex; gap: 6px; margin-bottom: 10px; }
+  .pill { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; border: 1px solid var(--border); border-radius: 10px; padding: 8px 6px; }
+  .mpb { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; flex-shrink: 0; }
+  .mpv { font-size: 12px; font-weight: 800; white-space: nowrap; }
+  .mpl { font-size: 9px; color: var(--faint); font-weight: 500; }
+  .adjust { background: none; border: none; font-size: 12px; font-weight: 600; color: var(--faint); text-decoration: underline; cursor: pointer; padding: 0; }
+
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 22px 10px 16px; border-radius: 16px; border: 1.5px solid var(--border); background: #fff; cursor: pointer; font-family: inherit; transition: border-color .15s, background .15s, transform .1s; }
+  .tile:active { transform: scale(.98); }
+  .tile.on { border-color: var(--coral); background: var(--coral-soft); }
+  .tile-icon { font-size: 30px; color: #c4c4c8; }
+  .tile.on .tile-icon, .tile.on .tile-sub { color: var(--coral); }
+  .tile-label { font-size: 15px; font-weight: 700; color: var(--text); }
+  .tile-sub { font-size: 11px; font-weight: 600; color: var(--faint); }
+  .tile-check { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; background: #fff; }
+  .tile-check .mat-icon { font-size: 14px; color: #c4c4c8; }
+  .tile.on .tile-check { background: var(--coral); border-color: var(--coral); }
+  .tile.on .tile-check .mat-icon { color: #fff; }
+  .hint { font-size: 13px; color: var(--muted); margin: 10px 0 0; line-height: 1.45; }
+  .share { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; margin-top: 20px; border-radius: 14px; background: var(--coral-soft); border: 1px solid var(--coral-line); }
+  .share b { font-size: 14px; }
+  .share span { font-size: 13px; color: var(--muted); line-height: 1.45; }
+
+  .seg { display: flex; background: var(--skeleton); border-radius: 10px; padding: 3px; gap: 2px; }
+  .seg button { flex: 1; padding: 8px 4px; border-radius: 7px; border: none; background: transparent; font: 700 13px Inter, sans-serif; color: var(--faint); cursor: pointer; }
+  .seg button.on { background: #fff; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  .seg + .seg { margin-top: 8px; }
+
+  .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: #a1a1aa; margin-bottom: 10px; }
+  .label i { text-transform: none; letter-spacing: 0; font-weight: 500; font-style: normal; margin-left: 4px; }
+  .label-hint { font-size: 13px; color: var(--muted); margin: -6px 0 12px; }
+  .section { margin-bottom: 28px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 6px 12px; border-radius: 12px; border: 1.5px solid var(--border); background: #fff; cursor: pointer; font-family: inherit; }
+  .card .mat-icon { font-size: 22px; color: var(--faint); }
+  .card span:last-child { font-size: 11px; font-weight: 600; color: var(--muted); }
+  .card.on { border-color: var(--coral); background: var(--coral-soft); }
+  .card.on .mat-icon, .card.on span:last-child { color: var(--coral); }
+  .grid3.g2 { grid-template-columns: 1fr 1fr; }
+  .card-check { position: absolute; top: 6px; right: 6px; width: 16px; height: 16px; border-radius: 50%; background: var(--coral); display: flex; align-items: center; justify-content: center; }
+  .card-check .mat-icon { font-size: 11px !important; color: #fff !important; }
+
+  .choice-grid { display: grid; gap: 10px; }
+  .cg2 { grid-template-columns: 1fr 1fr; margin-bottom: 10px; }
+  .stepper-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-top: 30px; }
+  .bubble { position: relative; padding: 8px 14px; border-radius: 14px; background: #fff; box-shadow: 0 6px 20px rgba(17,24,39,.06); font-size: 14px; font-weight: 700; animation: pop .3s cubic-bezier(.34,1.56,.64,1); }
+  .bubble::after { content: ''; position: absolute; left: 50%; bottom: -6px; width: 12px; height: 12px; background: #fff; transform: translateX(-50%) rotate(45deg); border-radius: 2px; }
+  .stepper { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 320px; }
+  .sbtn { width: 48px; height: 48px; border-radius: 50%; border: none; background: #fff; box-shadow: 0 4px 14px rgba(17,24,39,.07); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); transition: transform .1s; }
+  .sbtn:active { transform: scale(.92); }
+  .sbtn:disabled { opacity: .35; box-shadow: none; background: var(--skeleton); cursor: default; }
+  .sbtn .mat-icon { font-size: 22px; }
+  .sval { display: flex; align-items: baseline; gap: 10px; font-size: 38px; font-weight: 700; letter-spacing: -1px; line-height: 1; animation: pop .25s cubic-bezier(.34,1.56,.64,1); }
+  .sval small { font-size: inherit; font-weight: inherit; letter-spacing: inherit; }
+  .spill { padding: 8px 16px; border-radius: 999px; background: var(--coral-soft); color: var(--coral); font-size: 15px; font-weight: 700; }
+  .ssub { font-size: 15px; font-weight: 500; color: var(--faint); }
+  .ssub strong { font-weight: 700; color: var(--text); }
+  @keyframes pop { from { transform: scale(.85); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+  .choice { padding: 14px 6px; border-radius: 14px; border: 1.5px solid var(--border); background: #fff; font: 700 15px Inter, sans-serif; color: var(--faint); cursor: pointer; transition: border-color .15s, background .15s, color .15s, transform .1s; }
+  .choice:active { transform: scale(.98); }
+  .choice.on { border-color: var(--coral); background: var(--coral-soft); color: var(--coral); }
+  .review { background: #fff; border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 16px; border: none; border-bottom: 1px solid var(--border); background: #fff; cursor: pointer; text-align: left; font-family: inherit; }
+  .row:last-child { border-bottom: none; }
+  .row > .mat-icon { font-size: 20px; color: var(--coral); }
+  .row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .row-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #a1a1aa; }
+  .row-value { font-size: 14px; font-weight: 600; line-height: 1.35; color: var(--text); }
+  .row-edit { font-size: 12px; font-weight: 700; color: var(--coral); }
+
+  .bar { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 22px; background: rgba(255,255,255,.94); backdrop-filter: blur(12px); border-top: 1px solid var(--border); display: flex; gap: 10px; }
+  .back { width: 52px; height: 52px; flex-shrink: 0; border-radius: 14px; border: 1.5px solid var(--coral); background: var(--coral-soft); color: var(--coral); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .back .mat-icon { font-size: 28px; }
+  .primary { flex: 1; height: 52px; border: none; border-radius: 14px; background: var(--coral); color: #fff; font: 700 16px Inter, sans-serif; cursor: pointer; }
+  .primary:disabled { opacity: .5; cursor: default; }
+
+  .tcard { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 16px; box-shadow: 0 4px 16px rgba(17,24,39,.04); }
+  .ttop { display: flex; align-items: baseline; gap: 6px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .ttop .flame { font-size: 22px; color: var(--coral); align-self: center; font-variation-settings: 'FILL' 1; }
+  .tcal { font-size: 30px; font-weight: 900; letter-spacing: -.8px; line-height: 1; }
+  .tunit { font-size: 14px; font-weight: 600; color: var(--faint); }
+  .gear { margin-left: auto; align-self: center; width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--skeleton); color: var(--faint); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .gear .mat-icon { font-size: 18px; }
+  .tmacros { display: flex; justify-content: space-between; gap: 8px; }
+  .tm { display: flex; align-items: center; gap: 8px; }
+  .tm-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+  .tm-text { display: flex; flex-direction: column; gap: 1px; }
+  .tm-label { font-size: 11px; font-weight: 600; color: var(--faint); }
+  .tm-val { font-size: 15px; font-weight: 800; }
+  .tcard.empty .tcal, .tcard.empty .tm-val { color: #d1d5db; }
+
+  .gcount { display: flex; align-items: baseline; gap: 8px; font-size: 72px; font-weight: 900; letter-spacing: -2.5px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .gcount small { font-size: 24px; font-weight: 800; letter-spacing: -.5px; }
+  .gsteps { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 320px; margin-top: 16px; }
+  .gs { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 18px; background: #fff; box-shadow: 0 6px 18px rgba(17,24,39,.06); font-size: 15px; font-weight: 800; color: #c4c4c8; text-align: left; transition: color .3s, transform .3s; }
+  .gs.active { color: var(--text); transform: scale(1.03); }
+  .gs.done { color: var(--text); }
+  .gs-icon { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; background: var(--skeleton); color: var(--faint); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; }
+  .gs.active .gs-icon { background: var(--coral); }
+  .gs.done .gs-icon { background: #16a34a; color: #fff; animation: pop .3s cubic-bezier(.34,1.56,.64,1); }
+  .gs-icon .mat-icon { font-size: 18px; }
+  .spin { width: 16px; height: 16px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,.45); border-top-color: #fff; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* macro sheet mock */
+  .sheet-bg { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: flex-end; z-index: 5; }
+  .sheet { width: 100%; background: #fff; border-radius: 24px 24px 0 0; padding: 10px 18px 24px; animation: up .25s ease-out; }
+  @keyframes up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .grab { width: 40px; height: 4px; border-radius: 4px; background: #e5e7eb; margin: 0 auto 14px; }
+  .sheet h3 { margin: 0 0 4px; font-size: 18px; }
+  .sheet p { margin: 0 0 14px; font-size: 13px; color: var(--muted); }
+  .tgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .tcard { border: 1px solid var(--border); border-radius: 14px; padding: 12px; }
+  .tcard small { display: block; font-size: 10px; font-weight: 700; letter-spacing: .5px; color: var(--faint); }
+  .tcard b { font-size: 22px; }
+
+  /* building */
+  .gen { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 40px; gap: 16px; }
+  .orb { position: relative; width: 96px; height: 96px; margin-bottom: 28px; display: flex; align-items: center; justify-content: center; }
+  .ring { position: absolute; inset: 0; border-radius: 50%; border: 1px solid var(--coral); opacity: 0; animation: rad 3.2s ease-out infinite; }
+  .ring:nth-child(2) { animation-delay: .64s } .ring:nth-child(3) { animation-delay: 1.28s } .ring:nth-child(4) { animation-delay: 1.92s }
+  @keyframes rad { 0% { opacity: .3; transform: scale(1) } 100% { opacity: 0; transform: scale(3.2) } }
+  .orb .logo { width: 72px; height: 72px; font-size: 28px; margin: 0; position: relative; }
+  .steps { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 280px; }
+  .gstep { font-size: 13px; font-weight: 500; color: #d1d5db; padding: 10px 16px; border-radius: 10px; background: #f9f9f9; border: 1.5px solid transparent; transition: all .4s; }
+  .gstep.active { color: var(--coral); border-color: var(--coral); background: var(--coral-soft); }
+  .gstep.done { color: #16a34a; border-color: #dcfce7; background: #dcfce7; }
+  .gstep.done::before { content: '✓ '; }
+
+  /* results */
+  .res-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .res-head b { font-size: 15px; }
+  .res-scope { font-size: 12px; font-weight: 600; color: var(--faint); margin: 0 0 12px; }
+  .chip-btn { border: 1px solid var(--border); background: #fff; border-radius: 20px; padding: 5px 10px; font: 600 13px Inter, sans-serif; color: var(--muted); cursor: pointer; }
+  .day { border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-top: 14px; }
+  .day-h { padding: 12px 14px; }
+  .day-h b { font-size: 15px; }
+  .dmp { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .dmp span { font-size: 11px; font-weight: 600; padding: 3px 7px; border-radius: 999px; }
+  .meal { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--border); }
+  .thumb { width: 52px; height: 52px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .meal small { display: block; font-size: 10px; font-weight: 700; letter-spacing: .5px; color: #a1a1aa; text-transform: uppercase; }
+  .meal b { font-size: 14px; display: block; }
+  .meal em { font-style: normal; font-size: 11px; color: #a1a1aa; }
+</style>
+</head>
+<body>
+  <p class="note">Interactive preview: tap through it like a member would. <button onclick="reset(false)">Start as a new member</button> · <button onclick="reset(true)">Start as a returning member</button></p>
+  <div class="phone">
+    <div class="appbar"><div class="appbar-back"><span class="mat-icon">arrow_back</span></div>Create Meal Plan</div>
+    <div class="scroll" id="scroll"><div id="app"></div></div>
+    <div class="bar" id="bar"></div>
+    <div id="overlay"></div>
+  </div>
+
+<script>
+const STEPS = ['targets','meals','duration','diet','avoid','review'];
+const MAINS = ['Breakfast','Lunch','Dinner'];
+const META = {
+  targets:  ["Let's build your meal plan!", "First, we'll work out how much you need to eat each day."],
+  meals:    ['What meals would you like in your plan?', "Tap to add or remove. Skip any you've already got sorted."],
+  duration: ['Great choice! How long should your plan be?', 'You can always make a new one later.'],
+  diet:     ['Love it! How do you like to eat?', 'Pick the one that fits you best.'],
+  avoid:    ['Got it! Anything we should leave out?', 'Totally optional. Skip if nothing applies.'],
+  review:   ["Perfect! Here's your plan", 'Happy with everything? Tap any line to change it.'],
+};
+const STYLES = [['General','Everything','I eat it all','restaurant'],['Vegetarian','Vegetarian','No meat or fish','eco'],['Vegan','Vegan','Plants only','grass'],['Pescatarian','Pescatarian','Fish, but no meat','set_meal']];
+const STYLE_VALUES = STYLES.map(s => s[0]);
+const AVOID = [['Gluten Free','Gluten','grain'],['Dairy Free','Dairy','water_drop'],['Egg Free','Eggs','egg_alt'],['Nut Free','Nuts','psychiatry']];
+const LIFE = [['Pregnancy','Pregnant','pregnant_woman'],['Breastfeeding','Breastfeeding','child_care']];
+const CONFLICTS = { General:['Vegetarian','Vegan','Pescatarian'], Vegetarian:['General','Pescatarian'], Vegan:['General','Pescatarian'], Pescatarian:['General','Vegetarian','Vegan'], Pregnancy:['Breastfeeding'], Breastfeeding:['Pregnancy'] };
+const TILES = [['Breakfast','bakery_dining'],['Lunch','lunch_dining'],['Dinner','dinner_dining'],['Snacks','nutrition']];
+
+let S;
+function reset(returning) {
+  S = {
+    screen: 'wizard', step: returning ? 'review' : 'targets', editing: false, sheet: false,
+    macros: returning ? { calories: 2230, protein: 134, carbs: 284, fat: 62 } : null,
+    meals: returning ? ['Dinner'] : [...MAINS], snacks: returning ? 0 : 2,
+    unit: 'weeks', count: 2, diet: returning ? ['General'] : [], allergies: [], gen: 0,
+  };
+  render();
+}
+
+function splits(sn) { return sn === 0 ? { Breakfast: .25, Lunch: .35, Dinner: .40 } : { Breakfast: .22, Lunch: .30, Dinner: .33, Snack1: .08, Snack2: .07 }; }
+function share() { const s = splits(S.snacks); let n = 0; for (const [k, v] of Object.entries(s)) if (!MAINS.includes(k) || S.meals.includes(k)) n += v; return n; }
+function planCal() { return Math.round(S.macros.calories * share()); }
+function days() { return S.unit === 'days' ? S.count : S.count * 7; }
+function included(m) { return m === 'Snacks' ? S.snacks > 0 : S.meals.includes(m); }
+function canContinue() {
+  if (S.step === 'meals') return S.meals.length > 0 || S.snacks > 0;
+  if (S.step === 'diet') return !!style();
+  if (S.step === 'review') return !!S.macros && (S.meals.length || S.snacks) && !!style();
+  return true;
+}
+function cta() {
+  if (S.step === 'review') return 'Build my meal plan';
+  if (S.step === 'targets' && !S.macros) return 'Work out my targets';
+  if (S.editing) return 'Save';
+  if (S.step === 'targets') return 'Looks good!';
+  if (S.step === 'avoid' && !avoidList().length) return 'Nothing to leave out';
+  return 'Next';
+}
+function mealsSummary() {
+  const m = MAINS.filter(x => S.meals.includes(x));
+  const sn = S.snacks ? 'snacks' : '';
+  if (!m.length) return sn ? 'Snacks only' : '—';
+  const t = m.length === 3 ? 'Breakfast, lunch & dinner' : m.join(' & ') + (m.length === 1 ? ' only' : '');
+  return sn ? `${t} + ${sn}` : t;
+}
+
+function pills(m) {
+  return `<div class="pills">
+    <span class="pill"><span class="mpb" style="background:#fef2f2;color:#ff9777"><span class="mat-icon" style="font-size:13px">local_fire_department</span></span><span class="mpv">${m.calories}<span class="mpl">cal</span></span></span>
+    <span class="pill"><span class="mpb" style="background:#fff7ed;color:#f97316">P</span><span class="mpv">${m.protein}<span class="mpl">g</span></span></span>
+    <span class="pill"><span class="mpb" style="background:#eff6ff;color:#3b82f6">C</span><span class="mpv">${m.carbs}<span class="mpl">g</span></span></span>
+    <span class="pill"><span class="mpb" style="background:#f0fdf4;color:#16a34a">F</span><span class="mpv">${m.fat}<span class="mpl">g</span></span></span>
+  </div>`;
+}
+
+function stepBody() {
+  if (S.step === 'targets') {
+    const m = S.macros;
+    const circ = [['protein','P','Protein','#fff7ed','#f97316'],['carbs','C','Carbs','#eff6ff','#3b82f6'],['fat','F','Fat','#f0fdf4','#16a34a']];
+    return `<div class="tcard ${m ? '' : 'empty'}">
+      <div class="ttop"><span class="mat-icon flame">local_fire_department</span><span class="tcal">${m ? m.calories : '—'}</span><span class="tunit">cal a day</span>
+        ${m ? '<button class="gear" onclick="openSheet()" aria-label="Adjust targets"><span class="mat-icon">settings</span></button>' : ''}</div>
+      <div class="tmacros">${circ.map(([k, l, lab, bg, c]) => `<div class="tm"><span class="tm-dot" style="background:${bg};color:${c}">${l}</span><span class="tm-text"><span class="tm-label">${lab}</span><span class="tm-val">${m ? m[k] + 'g' : '—'}</span></span></div>`).join('')}</div>
+    </div>`;
+  }
+  if (S.step === 'meals') {
+    const full = share() >= .999;
+    return `<div class="tiles">${TILES.map(([m, ic]) => `
+      <button class="tile ${included(m) ? 'on' : ''}" onclick="toggleMeal('${m}')">
+        <span class="tile-check"><span class="mat-icon">${included(m) ? 'check' : 'add'}</span></span>
+        <span class="mat-icon tile-icon">${ic}</span>
+        <span class="tile-label">${m}</span>
+        <span class="tile-sub">${included(m) ? 'Added' : 'Tap to add'}</span>
+      </button>`).join('')}</div>
+      ${S.snacks ? `<p class="hint">We'll only add snacks on days you need a little extra.</p>` : ''}
+      ${(S.meals.length || S.snacks) ? `<div class="share">${full
+        ? `<b>Your whole day is covered</b><span>${S.macros.calories} cal · P ${S.macros.protein}g · C ${S.macros.carbs}g · F ${S.macros.fat}g</span>`
+        : `<b>We'll plan about ${planCal()} cal a day for you</b><span>That leaves you around ${S.macros.calories - planCal()} cal for the meals you sort out yourself.</span>`}</div>` : ''}`;
+  }
+  if (S.step === 'duration') {
+    const opts = S.unit === 'days' ? [1,2,3,4,5,6] : [1,2,3,4,5,6,7,8];
+    return `<div class="choice-grid cg2">${['weeks','days'].map(u => `<button class="choice ${S.unit === u ? 'on' : ''}" onclick="setUnit('${u}')">${u === 'weeks' ? 'Weeks' : 'Days'}</button>`).join('')}</div>
+      <div class="stepper-wrap">
+        <span class="bubble">${reaction()}</span>
+        <div class="stepper">
+          <button class="sbtn" ${S.count <= opts[0] ? 'disabled' : ''} onclick="stepCount(-1)"><span class="mat-icon">remove</span></button>
+          <span class="sval">${S.count}<small>${S.unit === 'weeks' ? (S.count === 1 ? 'week' : 'weeks') : (S.count === 1 ? 'day' : 'days')}</small></span>
+          <button class="sbtn" ${S.count >= opts[opts.length - 1] ? 'disabled' : ''} onclick="stepCount(1)"><span class="mat-icon">add</span></button>
+        </div>
+        <span class="ssub">That's <strong>${days()} days</strong> of meals, sorted!</span>
+      </div>`;
+  }
+  if (S.step === 'diet') {
+    return `<div class="tiles">${STYLES.map(([v, l, sub, ic]) => `
+      <button class="tile ${style() === v ? 'on' : ''}" onclick="setStyle('${v}')">
+        <span class="tile-check"><span class="mat-icon">${style() === v ? 'check' : 'add'}</span></span>
+        <span class="mat-icon tile-icon">${ic}</span><span class="tile-label">${l}</span><span class="tile-sub">${sub}</span>
+      </button>`).join('')}</div>`;
+  }
+  if (S.step === 'avoid') {
+    const card = (v, l, ic, on, fn) => `<button class="card ${on ? 'on' : ''}" onclick="${fn}('${v}')">${on ? '<span class="card-check"><span class="mat-icon">check</span></span>' : ''}<span class="mat-icon">${ic}</span><span>${l}</span></button>`;
+    return `<div class="section"><div class="label">Leave out</div>
+      <div class="grid3 g2">${AVOID.map(([v, l, ic]) => card(v, l, ic, avoided(v), 'toggleAvoid')).join('')}</div></div>
+      <div class="section"><div class="label">Pregnant or breastfeeding?</div><p class="label-hint">We'll stick to recipes that are safe for you and baby.</p>
+      <div class="grid3 g2">${LIFE.map(([v, l, ic]) => card(v, l, ic, S.diet.includes(v), 'toggleDiet')).join('')}</div></div>`;
+  }
+  const rows = [
+    ['targets', 'local_fire_department', 'Your daily targets', S.macros ? `${S.macros.calories} cal · P ${S.macros.protein}g · C ${S.macros.carbs}g · F ${S.macros.fat}g` : 'Not set yet'],
+    ['meals', 'restaurant_menu', 'Meals in your plan', mealsSummary() + (share() < .999 ? ` (${planCal()} cal a day)` : '')],
+    ['duration', 'calendar_month', 'How long', S.unit === 'weeks' ? `${S.count} week${S.count > 1 ? 's' : ''} (${days()} days)` : `${S.count} day${S.count > 1 ? 's' : ''}`],
+    ['diet', 'eco', 'How you eat', (STYLES.find(x => x[0] === style()) || [])[1] || 'Not picked yet'],
+    ['avoid', 'block', 'Leaving out', avoidList().join(', ') || 'Nothing'],
+  ];
+  return `<div class="review">${rows.map(([st, ic, l, v]) => `<button class="row" onclick="edit('${st}')"><span class="mat-icon">${ic}</span><span class="row-text"><span class="row-label">${l}</span><span class="row-value">${v}</span></span><span class="row-edit">Change</span></button>`).join('')}</div>`;
+}
+
+function render() {
+  const app = document.getElementById('app'), bar = document.getElementById('bar'), ov = document.getElementById('overlay');
+  if (S.screen === 'building') {
+    bar.style.display = 'none'; ov.innerHTML = '';
+    const steps = ['Checking what you eat', 'Matching your targets', 'Mixing things up'];
+    app.innerHTML = `<div class="gen"><div class="orb"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="logo">28</div></div>
+      <h2 class="wiz-title">Building your ${days()}-day plan</h2>
+      <div class="gsteps">${steps.map((t, i) => `<div class="gs ${S.gen === i + 1 ? 'active' : ''} ${S.gen > i + 1 ? 'done' : ''}"><span class="gs-icon">${S.gen > i + 1 ? '<span class="mat-icon">check</span>' : S.gen === i + 1 ? '<span class="spin"></span>' : i + 1}</span>${t}</div>`).join('')}</div></div>`;
+    return;
+  }
+  if (S.screen === 'results') { renderResults(app, bar); return; }
+
+  const [title, sub] = (S.step === 'targets' && S.macros) ? ['Here are your daily targets', 'Look right? You can tweak them any time.'] : META[S.step];
+  const idx = STEPS.indexOf(S.step);
+  app.innerHTML = `<div class="wiz-top"><div class="wiz-progress">${STEPS.map((_, i) => `<div class="wiz-seg ${i <= idx ? 'on' : ''}"></div>`).join('')}</div><span class="wiz-count">Step ${idx + 1} of ${STEPS.length}</span></div>
+    <div class="wiz-step"><div class="wiz-head"><div class="logo">28</div><h2 class="wiz-title">${title}</h2><p class="wiz-sub">${sub}</p></div>${stepBody()}</div>`;
+  bar.style.display = 'flex';
+  const showBack = S.editing || idx > 0;
+  bar.innerHTML = `${showBack ? `<button class="back" onclick="back()"><span class="mat-icon">chevron_left</span></button>` : ''}<button class="primary" ${canContinue() ? '' : 'disabled'} onclick="next()">${cta()}</button>`;
+  ov.innerHTML = S.sheet ? `<div class="sheet-bg" onclick="if(event.target===this){S.sheet=false;render()}"><div class="sheet"><div class="grab"></div>
+    <h3>Your Macro Targets</h3><p>Maintenance · 2230 TDEE <i style="color:#c4c4c8">(your existing macro sheet goes here)</i></p>
+    <div class="tgrid"><div class="tcard"><small>CALORIES</small><b style="color:#ef4444">2230</b></div><div class="tcard"><small>PROTEIN</small><b style="color:#f97316">134g</b></div><div class="tcard"><small>CARBS</small><b style="color:#3b82f6">284g</b></div><div class="tcard"><small>FAT</small><b style="color:#16a34a">62g</b></div></div>
+    <button class="primary" style="width:100%" onclick="setTargets()">Done ✓</button></div></div>` : '';
+}
+
+const SAMPLE = {
+  Breakfast: [['Halloumi Packs', 386, 27, 6, 11, '🥙', '#e8f5e9'], ['Berry Protein Oats', 410, 30, 48, 9, '🫐', '#ede7f6']],
+  Lunch: [['Chicken Pad Thai', 544, 45, 52, 15, '🍜', '#fff3e0'], ['Tuna Nicoise Bowl', 498, 41, 30, 18, '🥗', '#e3f2fd']],
+  Dinner: [['Quinoa Crumbed Fish', 760, 58, 70, 22, '🐟', '#e0f7fa'], ['Beef & Broccoli Stir Fry', 812, 62, 74, 24, '🥦', '#f1f8e9']],
+  Snack: [['Spinach & Haloumi Hot Pocket', 205, 14, 20, 7, '🥟', '#fce4ec'], ['Tortilla Egg Cups', 148, 11, 10, 6, '🍳', '#fffde7']],
+};
+function renderResults(app, bar) {
+  const target = share() >= .999 ? S.macros.calories : planCal();
+  const scope = share() >= .999 ? '' : `${mealsSummary()} · ${Math.round(share() * 100)}% of your daily targets`;
+  let html = `<div class="res-head"><b>${days()}-day plan</b><button class="chip-btn" onclick="S.screen='wizard';S.step='review';render()">↺ Edit plan</button></div>${scope ? `<p class="res-scope">${scope}</p>` : '<p class="res-scope">&nbsp;</p>'}
+    ${pills(share() >= .999 ? S.macros : { calories: target, protein: Math.round(S.macros.protein * share()), carbs: Math.round(S.macros.carbs * share()), fat: Math.round(S.macros.fat * share()) })}`;
+  for (let d = 0; d < 2; d++) {
+    const meals = [];
+    MAINS.filter(m => S.meals.includes(m)).forEach(m => meals.push([m, SAMPLE[m][d]]));
+    if (S.snacks) meals.push(['Snack', SAMPLE.Snack[d]]);
+    const cal = meals.reduce((n, [, r]) => n + r[1], 0);
+    const diff = cal - target;
+    html += `<div class="day"><div class="day-h"><b>Day ${d + 1}</b><div class="dmp"><span style="background:#fef2f2;color:#ef4444">${cal} cal</span><span style="background:#fff7ed;color:#f97316">P ${meals.reduce((n, [, r]) => n + r[2], 0)}g</span>${Math.abs(diff) < 50 ? '<span style="color:#16a34a;font-weight:700">On target</span>' : `<span style="color:#b45309;font-weight:700">${diff > 0 ? '+' : ''}${diff} cal</span>`}</div></div>
+      ${meals.map(([type, r]) => `<div class="meal"><div class="thumb" style="background:${r[6]}">${r[5]}</div><div style="flex:1;min-width:0"><small>${type}</small><b>${r[0]}</b><em>${r[1]} cal · P ${r[2]}g · C ${r[3]}g · F ${r[4]}g</em></div></div>`).join('')}</div>`;
+  }
+  app.innerHTML = html;
+  bar.style.display = 'flex';
+  bar.innerHTML = `<button class="primary" onclick="alert('→ your existing “When does your plan start?” sheet')">Add to Planner</button>`;
+}
+
+function next() {
+  if (!canContinue()) return;
+  if (S.step === 'targets' && !S.macros) return openSheet();
+  if (S.step === 'review') return build();
+  if (S.editing) { S.editing = false; S.step = 'review'; }
+  else S.step = STEPS[STEPS.indexOf(S.step) + 1];
+  document.getElementById('scroll').scrollTop = 0; render();
+}
+function back() {
+  if (S.editing) { S.editing = false; S.step = 'review'; }
+  else S.step = STEPS[Math.max(0, STEPS.indexOf(S.step) - 1)];
+  render();
+}
+function edit(st) { S.editing = true; S.step = st; render(); }
+function openSheet() { S.sheet = true; render(); }
+function setTargets() {
+  const first = !S.macros;
+  S.macros = { calories: 2230, protein: 134, carbs: 284, fat: 62 }; S.sheet = false;
+  if (first && S.step === 'targets' && !S.editing) S.step = 'meals';
+  render();
+}
+function toggleMeal(m) {
+  if (m === 'Snacks') S.snacks = S.snacks ? 0 : 2;
+  else S.meals = S.meals.includes(m) ? S.meals.filter(x => x !== m) : MAINS.filter(x => x === m || S.meals.includes(x));
+  render();
+}
+function stepCount(d) { const max = S.unit === 'days' ? 6 : 8; S.count = Math.min(max, Math.max(1, S.count + d)); render(); }
+function reaction() { const d = days(); return d <= 3 ? 'Short and sweet!' : d <= 7 ? 'Nice and easy!' : d <= 14 ? 'Perfect target!' : d <= 28 ? 'Love the commitment!' : "Now we're cooking!"; }
+function setUnit(u) { S.unit = u; if (u === 'days' && S.count > 6) S.count = 6; render(); }
+function toggleDiet(v) {
+  if (S.diet.includes(v)) S.diet = S.diet.filter(x => x !== v);
+  else { S.diet = S.diet.filter(x => !(CONFLICTS[v] || []).includes(x)); S.diet.push(v); }
+  render();
+}
+function style() { return STYLE_VALUES.find(v => S.diet.includes(v)) || null; }
+function setStyle(v) { S.diet = [...S.diet.filter(x => !STYLE_VALUES.includes(x)), v]; render(); }
+function avoided(v) { return v === 'Gluten Free' ? S.diet.includes(v) : S.allergies.includes(v); }
+function toggleAvoid(v) { v === 'Gluten Free' ? toggleDiet(v) : toggleAllergy(v); }
+function avoidList() { return [...AVOID.filter(a => avoided(a[0])).map(a => a[1]), ...LIFE.filter(l => S.diet.includes(l[0])).map(l => l[1])]; }
+function toggleAllergy(v) { S.allergies = S.allergies.includes(v) ? S.allergies.filter(x => x !== v) : [...S.allergies, v]; render(); }
+function build() {
+  S.screen = 'building'; S.gen = 0; render();
+  [900, 2100, 3300].forEach((t, i) => setTimeout(() => { S.gen = i + 1; render(); }, t));
+  setTimeout(() => { S.gen = 4; render(); }, 4300);
+  setTimeout(() => { S.screen = 'results'; render(); }, 5200);
+}
+reset(false);
+</script>
+</body>
+</html>
